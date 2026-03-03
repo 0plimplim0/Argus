@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <string>
+#include <utility>
+#include <optional>
 
 namespace utils{
 
@@ -15,15 +17,20 @@ namespace formatter{
 
 namespace parser{
 struct Arguments{
-  std::vector<std::string> filenames;
-  std::vector<std::string> flags;
+  std::vector<std::string_view> filenames;
+  std::vector<std::pair<std::string_view, std::optional<std::string_view>>> flags;
   bool success = true;
 };
-inline const std::vector<std::string_view> flags = {"-v", "-s", "-I"};
+
+inline const std::vector<std::pair<std::string, bool>> flags = {
+  {"--pattern", true},
+  {"--count", false},
+  {"--test", false}
+};
+
 void Test(const Arguments& args);
 Arguments ParseArguments(std::vector<std::string_view> args);
-std::string CheckType(std::string_view arg);
-bool ValidateArg(std::string_view arg, std::string_view type);
+auto getFlag(std::string_view arg);
 } // namespace parser
 
 } // namespace utils

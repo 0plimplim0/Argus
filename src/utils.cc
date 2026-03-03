@@ -3,58 +3,51 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
-// Namespace Parser
+namespace up = utils::parser;
 
-void utils::parser::Test(const utils::parser::Arguments& args){
-  for (std::string_view filename : args.filenames) {
-    std::cout << "filename: " << filename << "\n";
+// Namespace Parser
+// TODO: Change to external lib for argument parsing
+
+void up::Test(const utils::parser::Arguments& args){
+  for (const auto& filename : args.filenames) {
+    std::cout << "Filename: " << filename << "\n";
   }
-  for (std::string_view flag : args.flags) {
-    std::cout << "Flag: " << flag << "\n";
+  for (const auto& flag : args.flags) {
+    std::cout << "Flag: " << flag.first << "\n";
+    if (flag.second) {
+      std::cout << "Value: " << *flag.second << "\n";
+    }
   }
 }
 
-utils::parser::Arguments utils::parser::ParseArguments(std::vector<std::string_view> args){
-  utils::parser::Arguments Args;
-  for (std::string_view arg : args){
-    std::string type = utils::parser::CheckType(arg);
-    if (utils::parser::ValidateArg(arg, type)){
-      std::string Arg{arg};
-      if (type == "FILENAME") {
-        Args.filenames.push_back(Arg);
+auto up::getFlag(std::string_view arg){
+  return std::find_if(up::flags.begin(), up::flags.end(), [&arg](const auto& p) {
+    return p.first == arg;
+  });
+}
+
+up::Arguments up::ParseArguments(std::vector<std::string_view> args){
+  up::Arguments Args;
+  for (int i = 0; i <args.size(); i++) {
+    if (args[i][0] == '-') {
+      auto flag = up::getFlag(args[i]);
+      if (flag == up::flags.end()) { Args.success = false; break; }
+      if (flag->second) {
+        // Require arguments
+        if (i < args.size() - 1) { Args.success = false; break;}
+        Args.flags.push_back({args[i], args[i+1]});
+        i++;
       } else {
-        Args.flags.push_back(Arg);
+        // Don't require arguments
+        Args.flags.push_back({args[i], std::nullopt});
       }
     } else {
-      Args.success = false;
+      Args.filenames.push_back(args[i]);
     }
   }
   return Args;
-}
-
-// Returns: FILENAME | FLAG 
-// TODO: Use enum class instead std::string
-std::string utils::parser::CheckType(std::string_view arg){
-  if (arg[0] == '-') {
-    return "FLAG";
-  } else {
-    return "FILENAME";
-  }
-}
-
-bool utils::parser::ValidateArg(std::string_view arg, std::string_view type){
-  // TODO: Remove filename checking, trying open the file already checks
-  if (type == "FILENAME") {
-    std::error_code ec;
-    std::filesystem::file_status f = std::filesystem::status(arg, ec);
-    if (ec || ((f.permissions() & std::filesystem::perms::owner_read) == std::filesystem::perms::none)) { return false; }
-    else { return true; }
-  } else {
-    if (std::find(utils::parser::flags.begin(), utils::parser::flags.end(), arg) != utils::parser::flags.end()){
-      return true;
-    } else { return false; }
-  }
 }
