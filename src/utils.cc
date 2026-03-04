@@ -30,7 +30,7 @@ auto up::getFlag(std::string_view arg){
 }
 
 up::vFlag up::getVflag(std::string_view arg) {
-  size_t  pos = arg.find(':');
+  size_t  pos = arg.find('=');
   if (pos == std::string_view::npos) { return {}; }
   return {
     arg.substr(0, pos),
@@ -42,7 +42,9 @@ up::Arguments up::ParseArguments(std::vector<std::string_view> args){
   up::Arguments Args;
   for (std::string_view arg : args) {
     if (!arg.empty() && arg[0] == '-') {
-      auto flag = up::getFlag(arg);
+      auto [Flag, Value] = up::getVflag(arg);
+      if (Flag.empty()) { Flag = arg; }
+      auto flag = up::getFlag(Flag);
       if (flag == up::flags.end()) {
         Args.success = false;
         Args.error_message = "One of the flags entered does not exist.";
@@ -50,8 +52,7 @@ up::Arguments up::ParseArguments(std::vector<std::string_view> args){
       }
       if (flag->second) {
         // Require arguments
-        auto [Flag, Value] = up::getVflag(arg);
-        if (Flag.empty() || Value.empty()) {
+        if (Value.empty()) {
           Args.success = false;
           Args.error_message = "One of the flags requires an argument but none was provided.";
           break;
