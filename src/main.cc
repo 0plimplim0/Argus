@@ -23,7 +23,7 @@ int main(int argc, char** argv){
   if (Args.success) {
     up::Test(Args);
   } else {
-    std::cerr << "Something was grong...\n";
+    std::cout << Args.error_message << "\n";
     return 1;
   }
   return 0;
