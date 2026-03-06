@@ -27,7 +27,7 @@ struct vFlag {
   std::string_view value;
 };
 
-inline const std::vector<std::pair<std::string, bool>> flags = {
+inline const std::vector<std::pair<std::string_view, bool>> flags = {
   {"--pattern", true},
   {"--count", false},
   {"--test", false}

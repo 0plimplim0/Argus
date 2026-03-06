@@ -1,4 +1,6 @@
 #include "utils.hh"
+#include "analyzer.hh"
+#include "analysis.hh"
 
 #include <iostream>
 #include <string>
@@ -6,7 +8,7 @@
 
 namespace up = utils::parser;
 
-// 0: No errors | 1: Argument error | 2: File error
+// 0: No errors | 1: Parser error | 2: Analyzer error
 int main(int argc, char** argv){
   
   if (argc < 2) {
@@ -20,11 +22,19 @@ int main(int argc, char** argv){
   }
 
   up::Arguments Args = up::ParseArguments(args);
-  if (Args.success) {
-    up::Test(Args);
-  } else {
+  if (!Args.success) {
     std::cout << Args.error_message << "\n";
     return 1;
+  }
+  Analyzer analyzer;
+  AnalysisReqs data = {Args.filenames, Args.flags};
+  Analysis analysis = analyzer.Analyze(data);
+  if (!analysis.success) {
+    std::cout << analysis.error_message << "\n";
+    return 2;
+  }
+  for (std::string_view line : analysis.matches) {
+    std::cout << line << "\n";
   }
   return 0;
 }
