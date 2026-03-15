@@ -38,4 +38,4 @@ time ./build/argus --pattern="your_pattern" filename.txt
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIT](./LICENSE)
